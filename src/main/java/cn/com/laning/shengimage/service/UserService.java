@@ -1,10 +1,14 @@
 package cn.com.laning.shengimage.service;
 
+import cn.com.laning.shengimage.model.dto.user.UserQueryRequest;
 import cn.com.laning.shengimage.model.entity.User;
 import cn.com.laning.shengimage.model.vo.LoginUserVO;
+import cn.com.laning.shengimage.model.vo.UserVO;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
 * @author lenovo
@@ -54,10 +58,37 @@ public interface UserService extends IService<User> {
      */
     LoginUserVO getLoginUserVO(User user);
 
+
+    /**
+     * 获取脱敏的用户信息
+     *
+     * @param user
+     * @return
+     */
+    UserVO getUserVO(User user);
+
+
+    /**
+     * 获取脱敏的用户信息列标
+     *
+     * @return
+     */
+    List<UserVO> getUserVOList(List<User> userList);
+
     /**
      * 用户注销
      * @param request
      * @return
      */
     Boolean userLogout(HttpServletRequest request);
+
+
+    /**
+     * 转换QueryWrapper
+     *
+     * @param userQueryRequest
+     * @return
+     */
+    QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest);
+
 }
