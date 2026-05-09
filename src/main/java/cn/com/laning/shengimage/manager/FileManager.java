@@ -13,21 +13,21 @@ import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.qcloud.cos.model.PutObjectResult;
 import com.qcloud.cos.model.ciModel.persistence.ImageInfo;
-import com.qcloud.cos.model.ciModel.persistence.OriginalInfo;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 @Slf4j
 @Service
-@Component
+@Deprecated
 public class FileManager {
 
     @Resource
@@ -102,6 +102,8 @@ public class FileManager {
 
     /**
      * 删除临时文件
+     *
+     * @param file
      */
     public void deleteTempFile(File file) {
         if (file == null) {
@@ -113,6 +115,105 @@ public class FileManager {
             log.error("file delete error, filepath = {}", file.getAbsolutePath());
         }
     }
+
+//
+//    /**
+//     * TODO 新增的方法
+//     * 通过url上传图片
+//     *
+//     * @param fileUrl          文件
+//     * @param uploadPathPrefix
+//     * @return
+//     */
+//    public UploadPictureResult uploadPictureByUrl(String fileUrl, String uploadPathPrefix) {
+//        // 校验图片
+//        validPicture(fileUrl);
+//        // 图片上传地址
+//        String uuid = RandomUtil.randomString(16);
+////      String originFilename = multipartFile.getOriginalFilename();
+//        String originFilename = FileUtil.mainName(fileUrl);
+//        String uploadFilename = String.format("%s_%s.%s", DateUtil.formatDate(new Date()), uuid,
+//                FileUtil.getSuffix(originFilename));
+//        String uploadPath = String.format("/%s/%s", uploadPathPrefix, uploadFilename);
+//        File file = null;
+//        try {
+//            // 创建临时文件
+//            file = File.createTempFile(uploadPath, null);
+//            // 图片下载
+//            HttpUtil.downloadFile(fileUrl, file);
+//            // 上传图片
+//            PutObjectResult putObjectResult = cosManager.putPictureObject(uploadPath, file);
+//            ImageInfo imageInfo = putObjectResult.getCiUploadResult().getOriginalInfo().getImageInfo();
+//            // 封装返回结果
+//            UploadPictureResult uploadPictureResult = new UploadPictureResult();
+//            int picWidth = imageInfo.getWidth();
+//            int picHeight = imageInfo.getHeight();
+//            double picScale = NumberUtil.round(picWidth * 1.0 / picHeight, 2).doubleValue();
+//            uploadPictureResult.setPicName(FileUtil.mainName(originFilename));
+//            uploadPictureResult.setPicWidth(picWidth);
+//            uploadPictureResult.setPicHeight(picHeight);
+//            uploadPictureResult.setPicScale(picScale);
+//            uploadPictureResult.setPicFormat(imageInfo.getFormat());
+//            uploadPictureResult.setPicSize(FileUtil.size(file));
+//            uploadPictureResult.setUrl(cosClientConfig.getHost() + "/" + uploadPath);
+//            return uploadPictureResult;
+//        } catch (Exception e) {
+//            log.error("图片上传到对象存储失败", e);
+//            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "上传失败");
+//        } finally {
+//            this.deleteTempFile(file);
+//        }
+//    }
+//
+//    /**
+//     * 根据url校验文件
+//     *
+//     * @param fileUrl
+//     */
+//    private void validPicture(String fileUrl) {
+//        // 校验非空
+//        ThrowUtils.throwIf(StrUtil.isBlank(fileUrl), ErrorCode.NOT_FOUND_ERROR, "文件地址为空");
+//        // 校验url 格式
+//        try {
+//            new URL(fileUrl);
+//        } catch (MalformedURLException e) {
+//            throw new BusinessException(ErrorCode.PARAMS_ERROR, "文件地址格式错误");
+//        }
+//        // 校验url 协议
+//        ThrowUtils.throwIf(fileUrl.startsWith("https://") || fileUrl.startsWith("http://"),
+//                ErrorCode.PARAMS_ERROR, "仅支持http 或 https 协议的文件地址"
+//        );
+//        //  发送HEAD请求 验证文件是否存在
+//        HttpResponse httpResponse = null;
+//        try {
+//            httpResponse = HttpUtil.createRequest(Method.HEAD, fileUrl).execute();
+//            if (httpResponse.getStatus() != HttpStatus.HTTP_OK) {
+//                return;
+//            }
+//            // 文件存在
+//            String contentType = httpResponse.header("Content-type");
+//            if(StrUtil.isBlank(contentType)){
+//                // 允许的图片类型
+//                final List<String> ALLOW_CONTENT_TYPES = Arrays.asList("image/jpeg", "image/jpg", "image/png", "image/webp");
+//                ThrowUtils.throwIf(!ALLOW_CONTENT_TYPES.contains(contentType.toLowerCase()),
+//                        ErrorCode.PARAMS_ERROR, "文件类型错误");
+//            }
+//            String contentLengthStr = httpResponse.header("Content-Length");
+//            if(StrUtil.isBlank(contentLengthStr)){
+//                try {
+//                    long contentLength = Long.parseLong(contentLengthStr);
+//                    final long TWO_MB = 2 * 1024 * 1024L; // 限制文件大小为 2MB
+//                    ThrowUtils.throwIf(contentLength > TWO_MB, ErrorCode.PARAMS_ERROR, "文件大小不能超过 2M");
+//                } catch (NumberFormatException e) {
+//                    throw new BusinessException(ErrorCode.PARAMS_ERROR, "文件大小格式错误");
+//                }
+//            }
+//        } finally {
+//            if(httpResponse != null){
+//                httpResponse.close();
+//            }
+//        }
+//    }
 
 
 }

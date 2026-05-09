@@ -1,6 +1,7 @@
 package cn.com.laning.shengimage.service;
 
 import cn.com.laning.shengimage.model.dto.picture.PictureQueryRequest;
+import cn.com.laning.shengimage.model.dto.picture.PictureReviewRequest;
 import cn.com.laning.shengimage.model.dto.picture.PictureUploadRequest;
 import cn.com.laning.shengimage.model.dto.user.UserQueryRequest;
 import cn.com.laning.shengimage.model.entity.Picture;
@@ -23,12 +24,12 @@ public interface PictureService extends IService<Picture> {
     /**
      * 上传图片
      *
-     * @param multipartFile
+     * @param inputSource
      * @param pictureUploadRequest
      * @param loginUser
      * @return
      */
-    PictureVO uploadPicture(MultipartFile multipartFile,
+    PictureVO uploadPicture(Object inputSource,
                             PictureUploadRequest pictureUploadRequest,
                             User loginUser);
 
@@ -64,4 +65,21 @@ public interface PictureService extends IService<Picture> {
      * @param picture
      */
     public void validPicture(Picture picture);
+
+
+    /**
+     * 图片审核
+     *
+     * @param pictureReviewRequest
+     * @param loginUser
+     */
+    void doPictureReview(PictureReviewRequest pictureReviewRequest, User loginUser);
+
+    /**
+     * 文件审核参数
+     *
+     * @param picture
+     * @param loginUser
+     */
+    void fileReviewParams(Picture picture, User loginUser);
 }
