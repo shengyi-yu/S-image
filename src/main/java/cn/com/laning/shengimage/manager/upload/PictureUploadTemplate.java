@@ -5,17 +5,21 @@ import cn.com.laning.shengimage.exception.BusinessException;
 import cn.com.laning.shengimage.exception.ErrorCode;
 import cn.com.laning.shengimage.manager.CosManager;
 import cn.com.laning.shengimage.model.dto.file.UploadPictureResult;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.qcloud.cos.model.PutObjectResult;
+import com.qcloud.cos.model.ciModel.persistence.CIObject;
 import com.qcloud.cos.model.ciModel.persistence.ImageInfo;
+import com.qcloud.cos.model.ciModel.persistence.ProcessResults;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
 import java.io.File;
 import java.util.Date;
+import java.util.List;
 
 @Slf4j
 public abstract class PictureUploadTemplate {
@@ -50,6 +54,18 @@ public abstract class PictureUploadTemplate {
             // 4. 上传图片到对象存储
             PutObjectResult putObjectResult = cosManager.putPictureObject(uploadPath, file);
             ImageInfo imageInfo = putObjectResult.getCiUploadResult().getOriginalInfo().getImageInfo();
+            // 获取图片处理结果
+            ProcessResults processResults = putObjectResult.getCiUploadResult().getProcessResults();
+            List<CIObject> objectList = processResults.getObjectList();
+            if(CollUtil.isNotEmpty(objectList)){
+                // 获取压缩之后的文件信息
+                CIObject compressedCiObject = objectList.get(0);
+                CIObject thumbnailCiObject = compressedCiObject;
+                if(objectList.size() > 1){
+                    thumbnailCiObject = objectList.get(1);
+                }
+                return buildResult(originFilename, compressedCiObject, thumbnailCiObject);
+            }
 
             // 5. 封装返回结果
             return buildResult(originFilename, file, uploadPath, imageInfo);
@@ -61,6 +77,8 @@ public abstract class PictureUploadTemplate {
             deleteTempFile(file);
         }
     }
+
+
 
     /**
      * 校验输入源（本地文件或 URL）
@@ -76,6 +94,31 @@ public abstract class PictureUploadTemplate {
      * 处理输入源并生成本地临时文件
      */
     protected abstract void processFile(Object inputSource, File file) throws Exception;
+
+    /**
+     * 封装返回结果
+     * @param originFilename
+     * @param compressedCiObject 压缩图片CI对象
+     * @param thumbnailCiObject 缩略图CI对象
+     * @return
+     */
+    private UploadPictureResult buildResult(String originFilename, CIObject compressedCiObject, CIObject thumbnailCiObject) {
+        UploadPictureResult uploadPictureResult = new UploadPictureResult();
+        int picWidth = compressedCiObject.getWidth();
+        int picHeight = compressedCiObject.getHeight();
+        double picScale = NumberUtil.round(picWidth * 1.0 / picHeight, 2).doubleValue();
+        // 压缩后的原图地址
+        uploadPictureResult.setPicName(FileUtil.mainName(originFilename));
+        uploadPictureResult.setPicWidth(picWidth);
+        uploadPictureResult.setPicHeight(picHeight);
+        uploadPictureResult.setPicScale(picScale);
+        uploadPictureResult.setPicFormat(compressedCiObject.getFormat());
+        uploadPictureResult.setPicSize(compressedCiObject.getSize().longValue());
+        uploadPictureResult.setUrl(cosClientConfig.getHost() + "/" + compressedCiObject.getKey());
+        // 缩略图地址
+        uploadPictureResult.setThumbnailUrl(cosClientConfig.getHost() + "/" + thumbnailCiObject.getKey());
+        return uploadPictureResult;
+    }
 
     /**
      * 封装返回结果

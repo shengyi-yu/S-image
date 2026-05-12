@@ -2,6 +2,10 @@ server:
   port: 8123
   servlet:
     context-path: /api
+    # cookie 30天过期
+    session:
+      cookie:
+        max-age: 2592000
 spring:
   application:
     name: Sheng-image
@@ -15,6 +19,19 @@ spring:
     url: jdbc:mysql://localhost:3306/S-images
     username: root
     password: 1234
+  # Redis 配置
+  redis:
+    database: 0
+    host: 127.0.0.1
+    port: 6379
+    timeout: 5000
+  #Session
+  session:
+    store-type: redis
+    timeout: 2592000
+#  profiles:
+#    active: local
+
 
 mybatis-plus:
   configuration:

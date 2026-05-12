@@ -3,6 +3,7 @@ package cn.com.laning.shengimage.service.impl;
 import cn.com.laning.shengimage.exception.BusinessException;
 import cn.com.laning.shengimage.exception.ErrorCode;
 import cn.com.laning.shengimage.exception.ThrowUtils;
+import cn.com.laning.shengimage.manager.CosManager;
 import cn.com.laning.shengimage.manager.FileManager;
 import cn.com.laning.shengimage.manager.upload.FilePictureUpload;
 import cn.com.laning.shengimage.manager.upload.PictureUploadTemplate;
@@ -32,6 +33,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -65,6 +68,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     @Resource
     private UrlPictureUpload urlPictureUpload;
+    @Autowired
+    private CosManager cosManager;
 
 
     /**
@@ -166,6 +171,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         // 构造要入库的图片信息
         Picture picture = new Picture();
         picture.setUrl(uploadPictureResult.getUrl());
+        picture.setThumbnailUrl(uploadPictureResult.getThumbnailUrl());
         String picName = uploadPictureResult.getPicName();
         if(pictureUploadRequest != null && StrUtil.isNotBlank(pictureUploadRequest.getPicName())) {
             picName = pictureUploadRequest.getPicName();
@@ -339,12 +345,22 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         if (ObjUtil.isNull(div)) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "获取元素失败");
         }
-        Elements imgElementList = div.select("img.mimg");
+        Elements aElementList = div.select("a.iusc");
         int uploadCount = 0;
-        for (Element imgElement : imgElementList) {
-            String fileUrl = imgElement.attr("src");
+        for (Element aElement : aElementList) {
+            // 从 a.iusc 的 m 属性获取原图 URL
+            String mAttr = aElement.attr("m");
+            String fileUrl = null;
+            if (StrUtil.isNotBlank(mAttr)) {
+                try {
+                    cn.hutool.json.JSONObject mJson = cn.hutool.json.JSONUtil.parseObj(mAttr);
+                    fileUrl = mJson.getStr("murl");
+                } catch (Exception e) {
+                    log.warn("解析 m 属性失败: {}", mAttr);
+                }
+            }
             if (StrUtil.isBlank(fileUrl)) {
-                log.info("当前链接为空，已跳过: {}", fileUrl);
+                log.info("原图 URL 为空，已跳过");
                 continue;
             }
             // 处理图片上传地址，防止出现转义问题
@@ -371,6 +387,27 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             }
         }
         return uploadCount;
+    }
+
+    @Async
+    @Override
+    public void clearPictureFile(Picture oldPicture) {
+        // 判断图片是否为多条记录使用
+        String pictureUrl = oldPicture.getUrl();
+        long count = this.lambdaQuery()
+                .eq(Picture::getUrl, pictureUrl)
+                .count();
+        // 不止一个记录在使用 ，不许清理
+        if(count <= 1){
+            return;
+        }
+        // 删除图片
+        cosManager.DeleteObject(pictureUrl);
+        // 删除缩略图
+        String thumbnailUrl = oldPicture.getThumbnailUrl();
+        if(StrUtil.isNotBlank(thumbnailUrl)){
+            cosManager.DeleteObject(thumbnailUrl);
+        }
     }
 
 }
