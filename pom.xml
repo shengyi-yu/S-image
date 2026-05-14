@@ -140,7 +140,7 @@
                 <version>${spring-boot.version}</version>
                 <configuration>
                     <mainClass>cn.com.laning.shengimage.ShengImageApplication</mainClass>
-                    <skip>true</skip>
+                    <skip>false</skip>
                 </configuration>
                 <executions>
                     <execution>

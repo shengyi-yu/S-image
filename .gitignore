@@ -1,5 +1,6 @@
 ### Custom ###
 application-local.yaml
+application-prod.yaml
 
 HELP.md
 target/

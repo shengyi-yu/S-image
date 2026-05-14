@@ -40,7 +40,7 @@ public interface PictureService extends IService<Picture> {
      * @param pictureQueryRequest
      * @return
      */
-    public QueryWrapper<Picture> getQueryWrapper(PictureQueryRequest pictureQueryRequest);
+    QueryWrapper<Picture> getQueryWrapper(PictureQueryRequest pictureQueryRequest);
 
     /**
      * 获取 PictureVO
@@ -49,7 +49,7 @@ public interface PictureService extends IService<Picture> {
      * @param request
      * @return
      */
-    public PictureVO getPictureVO(Picture picture, HttpServletRequest request);
+    PictureVO getPictureVO(Picture picture, HttpServletRequest request);
 
     /**
      * 获取列表
@@ -58,14 +58,14 @@ public interface PictureService extends IService<Picture> {
      * @param request
      * @return
      */
-    public Page<PictureVO> getPictureVOPage(Page<Picture> picturePage, HttpServletRequest request);
+    Page<PictureVO> getPictureVOPage(Page<Picture> picturePage, HttpServletRequest request);
 
     /**
      * 校验
      *
      * @param picture
      */
-    public void validPicture(Picture picture);
+    void validPicture(Picture picture);
 
 
     /**
