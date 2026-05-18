@@ -1,9 +1,6 @@
 package cn.com.laning.shengimage.service;
 
-import cn.com.laning.shengimage.model.dto.picture.PictureQueryRequest;
-import cn.com.laning.shengimage.model.dto.picture.PictureReviewRequest;
-import cn.com.laning.shengimage.model.dto.picture.PictureUploadByBatchRequest;
-import cn.com.laning.shengimage.model.dto.picture.PictureUploadRequest;
+import cn.com.laning.shengimage.model.dto.picture.*;
 import cn.com.laning.shengimage.model.dto.user.UserQueryRequest;
 import cn.com.laning.shengimage.model.entity.Picture;
 import cn.com.laning.shengimage.model.entity.User;
@@ -86,6 +83,20 @@ public interface PictureService extends IService<Picture> {
 
 
     /**
+     * 删除图片
+     * @param pictureId
+     * @param loginUser
+     */
+    void deletePicture(long pictureId, User loginUser);
+
+    /**
+     * 编辑图片
+     * @param pictureEditRequest
+     * @param loginUser
+     */
+    void editPicture(PictureEditRequest pictureEditRequest, User loginUser);
+
+    /**
      * 批量上传图片
      *
      * @param pictureUploadByBatchRequest
@@ -102,5 +113,13 @@ public interface PictureService extends IService<Picture> {
      * @param oldPicture
      */
     void clearPictureFile(Picture oldPicture);
+
+
+    /**
+     * 权限校验
+     * @param loginUser
+     * @param picture
+     */
+    void checkPictureAuth(User loginUser, Picture picture);
 
 }

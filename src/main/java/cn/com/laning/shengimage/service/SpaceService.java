@@ -1,7 +1,9 @@
 package cn.com.laning.shengimage.service;
 
+import cn.com.laning.shengimage.model.dto.space.SpaceAddRequest;
 import cn.com.laning.shengimage.model.dto.space.SpaceQueryRequest;
 import cn.com.laning.shengimage.model.entity.Space;
+import cn.com.laning.shengimage.model.entity.User;
 import cn.com.laning.shengimage.model.vo.SpaceVO;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -15,6 +17,15 @@ import javax.servlet.http.HttpServletRequest;
  * @createDate 2026-05-12 15:13:06
  */
 public interface SpaceService extends IService<Space> {
+
+    /**
+     * 创建空间
+     * @param spaceAddRequest
+     * @param loginUser
+     * @return
+     */
+    long addSpace(SpaceAddRequest spaceAddRequest, User loginUser);
+
     /**
      * 校验
      *

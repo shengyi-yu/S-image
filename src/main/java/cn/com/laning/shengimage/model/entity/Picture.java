@@ -81,6 +81,11 @@ public class Picture {
     private Long userId;
 
     /**
+     * 图片空间id
+     */
+    private Long spaceId;
+
+    /**
      * 创建时间
      */
     private Date createTime;
