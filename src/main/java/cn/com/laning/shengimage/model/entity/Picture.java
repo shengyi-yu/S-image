@@ -51,6 +51,20 @@ public class Picture {
     private String tags;
 
     /**
+     * AI 生成的标签(JSON)
+     * 数据库列名为 ai_tags（与其它驼峰列不同，需显式指定）
+     */
+    @TableField("ai_tags")
+    private String aiTags;
+
+    /**
+     * AI 生成的描述
+     * 数据库列名为 ai_description（与其它驼峰列不同，需显式指定）
+     */
+    @TableField("ai_description")
+    private String aiDescription;
+
+    /**
      * 图片体积
      */
     private Long picSize;

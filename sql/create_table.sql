@@ -89,3 +89,8 @@ ALTER TABLE picture
 CREATE INDEX idx_spaceId ON picture (spaceId);
 
 
+-- 由此开始添加 agent 功能
+-- 给 picture 表加字段
+ALTER TABLE picture ADD COLUMN ai_tags VARCHAR(500) COMMENT 'AI生成的标签(JSON数组)';
+ALTER TABLE picture ADD COLUMN ai_description VARCHAR(1000) COMMENT 'AI生成的描述';
+

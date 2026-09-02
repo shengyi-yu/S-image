@@ -17,6 +17,7 @@ import cn.com.laning.shengimage.model.entity.User;
 import cn.com.laning.shengimage.model.enums.PictureReviewStatusEnum;
 import cn.com.laning.shengimage.model.vo.PictureVO;
 import cn.com.laning.shengimage.model.vo.UserVO;
+import cn.com.laning.shengimage.service.PictureAiService;
 import cn.com.laning.shengimage.service.PictureService;
 import cn.com.laning.shengimage.service.SpaceService;
 import cn.com.laning.shengimage.service.UserService;
@@ -78,6 +79,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     @Resource
     private TransactionTemplate transactionTemplate;
+
+    @Resource
+    private PictureAiService pictureAiService;
 
     /**
      * 数据校验
@@ -154,7 +158,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             Space space = spaceService.getById(spaceId);
             ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
             // 校验是否有空间权限，或者是否为管理员
-            if(!loginUser.getId().equals(space.getUserId())){
+            if(!loginUser.getId().equals(space.getUserId()) && !userService.isAdmin(loginUser)){
                 throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "没有空间权限");
             }
             // 校验额度
@@ -174,10 +178,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         if (pictureId != null) {
             Picture oldPicture = this.getById(pictureId);
             ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR, "图片不存在");
-//            boolean exists = this.lambdaQuery()
-//                    .eq(Picture::getId, pictureId)
-//                    .exists();
-//           ThrowUtils.throwIf(!exists, ErrorCode.NOT_FOUND_ERROR, "图片不存在");
+            // 校验是否拥有权限
             if (!oldPicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
                 throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
             }
@@ -269,6 +270,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
         // 更新空间的使用额度
 
+        // 异步调用 AI 生成标签/描述（失败不影响上传，由 PictureAiService 内部兜底）
+        pictureAiService.fillAiInfo(picture);
+
         return PictureVO.objToVo(picture);
     }
 
@@ -348,9 +352,14 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         // 从多字段中搜索
         if (StrUtil.isNotBlank(searchText)) {
             // 需要拼接查询条件
+            // 加入 AI 生成的标签/描述，让 AI 标签也能被搜索到
             queryWrapper.and(qw -> qw.like("name", searchText)
                     .or()
                     .like("introduction", searchText)
+                    .or()
+                    .like("ai_tags", searchText)
+                    .or()
+                    .like("ai_description", searchText)
             );
         }
         queryWrapper.eq(ObjUtil.isNotEmpty(id), "id", id);
@@ -549,13 +558,13 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         Long spaceId = picture.getSpaceId();
         Long loginUserId = loginUser.getId();
         if(spaceId == null){
-            if(!picture.getUserId().equals(loginUserId) && userService.isAdmin(loginUser)){
+            if(!picture.getUserId().equals(loginUserId) && !userService.isAdmin(loginUser)){
                 throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
             }
         } else {
             // 私有空间只有管理员可以操作
             if(!picture.getUserId().equals(loginUserId)){
-                throw  new BusinessException(ErrorCode.NO_AUTH_ERROR);
+                throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
             }
         }
     }

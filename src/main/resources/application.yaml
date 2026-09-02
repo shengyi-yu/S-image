@@ -9,6 +9,9 @@ server:
 spring:
   application:
     name: Sheng-image
+  # 启用 local profile（读取 gitignored 的 application-local.yaml，存放 COS 等本地密钥）
+  profiles:
+    active: local
   # 修改文件上传体积
   servlet:
     multipart:
@@ -65,5 +68,10 @@ knife4j:
 #    secretKey: xxx
 #    region: xxx
 #    bucket: xxx
+
+## AI Agent 服务配置（Python 端，HTTP 直连）
+ai-agent:
+  base-url: http://localhost:8000
+  timeout: 60
 
 

@@ -2,6 +2,11 @@
 application-local.yaml
 application-prod.yaml
 
+# 本地 Maven 仓库副本与沙箱构建配置（勿提交）
+.m2-repo/
+.mvn-settings.xml
+.cp.txt
+
 HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar

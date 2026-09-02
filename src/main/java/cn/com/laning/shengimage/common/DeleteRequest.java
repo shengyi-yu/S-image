@@ -4,6 +4,11 @@ import lombok.Data;
 
 import java.io.Serializable;
 
+/**
+ * 删除请求
+ *
+ * @author laning
+ */
 @Data
 public class DeleteRequest implements Serializable {
 

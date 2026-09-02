@@ -44,6 +44,16 @@ public class PictureVO implements Serializable {
     private List<String> tags;
 
     /**
+     * AI 生成的标签
+     */
+    private List<String> aiTags;
+
+    /**
+     * AI 生成的描述
+     */
+    private String aiDescription;
+
+    /**
      * 分类
      */
     private String category;
@@ -116,6 +126,7 @@ public class PictureVO implements Serializable {
         BeanUtils.copyProperties(pictureVO, picture);
         // 类型不同，需要转换  
         picture.setTags(JSONUtil.toJsonStr(pictureVO.getTags()));
+        picture.setAiTags(JSONUtil.toJsonStr(pictureVO.getAiTags()));
         return picture;
     }
 
@@ -130,6 +141,7 @@ public class PictureVO implements Serializable {
         BeanUtils.copyProperties(picture, pictureVO);
         // 类型不同，需要转换  
         pictureVO.setTags(JSONUtil.toList(picture.getTags(), String.class));
+        pictureVO.setAiTags(JSONUtil.toList(picture.getAiTags(), String.class));
         return pictureVO;
     }
 }

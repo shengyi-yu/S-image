@@ -98,4 +98,14 @@ public interface UserService extends IService<User> {
      */
     boolean isAdmin(User user);
 
+    /**
+     * 修改个人信息
+     *
+     * @param loginUser 当前登录用户
+     * @param userName 用户昵称
+     * @param userAvatar 用户头像
+     * @param userProfile 用户简介
+     */
+    void updateMyProfile(User loginUser, String userName, String userAvatar, String userProfile);
+
 }

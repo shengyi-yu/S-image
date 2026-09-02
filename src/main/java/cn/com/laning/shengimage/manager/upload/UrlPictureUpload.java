@@ -46,14 +46,14 @@ public class UrlPictureUpload extends PictureUploadTemplate {
             }
             // 文件存在
             String contentType = httpResponse.header("Content-type");
-            if(StrUtil.isBlank(contentType)){
+            if(StrUtil.isNotBlank(contentType)){
                 // 允许的图片类型
                 final List<String> ALLOW_CONTENT_TYPES = Arrays.asList("image/jpeg", "image/jpg", "image/png", "image/webp");
                 ThrowUtils.throwIf(!ALLOW_CONTENT_TYPES.contains(contentType.toLowerCase()),
                         ErrorCode.PARAMS_ERROR, "文件类型错误");
             }
             String contentLengthStr = httpResponse.header("Content-Length");
-            if(StrUtil.isBlank(contentLengthStr)){
+            if(StrUtil.isNotBlank(contentLengthStr)){
                 try {
                     long contentLength = Long.parseLong(contentLengthStr);
                     final long TWO_MB = 2 * 1024 * 1024L; // 限制文件大小为 2MB

@@ -9,6 +9,8 @@ import cn.com.laning.shengimage.constant.UserConstant;
 import cn.com.laning.shengimage.exception.BusinessException;
 import cn.com.laning.shengimage.exception.ErrorCode;
 import cn.com.laning.shengimage.exception.ThrowUtils;
+import cn.com.laning.shengimage.manager.upload.FilePictureUpload;
+import cn.com.laning.shengimage.model.dto.file.UploadPictureResult;
 import cn.com.laning.shengimage.model.dto.user.*;
 import cn.com.laning.shengimage.model.entity.User;
 import cn.com.laning.shengimage.model.vo.LoginUserVO;
@@ -18,6 +20,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -33,6 +36,9 @@ public class UserController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private FilePictureUpload filePictureUpload;
 
     /**
      * 用户注册
@@ -171,5 +177,34 @@ public class UserController {
         List<UserVO> userVOList = userService.getUserVOList(userPage.getRecords());
         userVOPage.setRecords(userVOList);
         return ResultUtils.success(userVOPage);
+    }
+
+    /**
+     * 上传头像
+     */
+    @PostMapping("/upload/avatar")
+    public BaseResponse<UploadPictureResult> uploadAvatar(@RequestPart("file") MultipartFile file,
+                                                          HttpServletRequest request) {
+        ThrowUtils.throwIf(file == null, ErrorCode.PARAMS_ERROR, "文件不能为空");
+        User loginUser = userService.getLoginUser(request);
+        UploadPictureResult result = filePictureUpload.uploadPicture(file, "avatar");
+        return ResultUtils.success(result);
+    }
+
+    /**
+     * 修改个人信息
+     */
+    @PostMapping("/update/my")
+    public BaseResponse<LoginUserVO> updateMyProfile(@RequestBody UserUpdateMyRequest userUpdateMyRequest,
+                                                     HttpServletRequest request) {
+        ThrowUtils.throwIf(userUpdateMyRequest == null, ErrorCode.PARAMS_ERROR);
+        User loginUser = userService.getLoginUser(request);
+        userService.updateMyProfile(loginUser,
+                userUpdateMyRequest.getUserName(),
+                userUpdateMyRequest.getUserAvatar(),
+                userUpdateMyRequest.getUserProfile());
+        // 返回更新后的用户信息
+        User updatedUser = userService.getById(loginUser.getId());
+        return ResultUtils.success(userService.getLoginUserVO(updatedUser));
     }
 }

@@ -3,6 +3,7 @@ package cn.com.laning.shengimage.service.impl;
 import cn.com.laning.shengimage.constant.UserConstant;
 import cn.com.laning.shengimage.exception.BusinessException;
 import cn.com.laning.shengimage.exception.ErrorCode;
+import cn.com.laning.shengimage.exception.ThrowUtils;
 import cn.com.laning.shengimage.model.dto.user.UserQueryRequest;
 import cn.com.laning.shengimage.model.enums.UserRoleEnum;
 import cn.com.laning.shengimage.model.vo.LoginUserVO;
@@ -110,7 +111,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         queryWrapper.eq("userPassword", encryptPassword);
         User user = this.baseMapper.selectOne(queryWrapper);
         if(user == null){
-            log.info("user login failed, userAccount cannot match userPassword");
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
         }
         // 记录登录状态
@@ -225,6 +225,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Override
     public boolean isAdmin(User user) {
         return user != null && UserRoleEnum.ADMIN.getValue().equals(user.getUserRole());
+    }
+
+    @Override
+    public void updateMyProfile(User loginUser, String userName, String userAvatar, String userProfile) {
+        if (StrUtil.isNotBlank(userName) && userName.length() > 20) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "昵称不能超过20个字符");
+        }
+        User updateUser = new User();
+        updateUser.setId(loginUser.getId());
+        updateUser.setUserName(userName);
+        updateUser.setUserAvatar(userAvatar);
+        updateUser.setUserProfile(userProfile);
+        boolean result = this.updateById(updateUser);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "更新失败");
     }
 }
 

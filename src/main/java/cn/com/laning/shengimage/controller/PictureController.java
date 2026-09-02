@@ -66,11 +66,12 @@ public class PictureController {
 
     /**
      * 本地图片上传
-     * @param multipartFile
+//     * @param multipartFile
      * @param pictureUploadRequest
      * @param request
-     * @return
-     */
+     * @return+
+     *
+     *
     @PostMapping("/upload/url")
 //    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<PictureVO> uploadPicture(
@@ -233,8 +234,21 @@ public class PictureController {
         long size = pictureQueryRequest.getPageSize();
         // 限制爬虫
         ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-        // 普通用户默认只能看到审核通过的数据
-        pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+        // 权限校验
+        Long spaceId = pictureQueryRequest.getSpaceId();
+        if(spaceId == null){
+            // 公共图库：只看审核通过的
+            pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+            pictureQueryRequest.setNullSpaceId(true);
+        } else {
+            // 私有空间：不过滤审核状态，看所有图片
+            User loginUser = userService.getLoginUser(request);
+            Space space = spaceService.getById(spaceId);
+            ThrowUtils.throwIf(space == null, ErrorCode.PARAMS_ERROR, "请求空间不存在");
+            if(!loginUser.getId().equals(space.getUserId())){
+                throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "木有空间权限");
+            }
+        }
         // 先查询缓存，缓存中没有再查询数据库
         // 构建缓存的key
         String queryCondition = JSONUtil.toJsonStr(pictureQueryRequest);
@@ -268,7 +282,7 @@ public class PictureController {
         // 2.更新本地缓存
         LOCAL_CACHE.put(cacheKey, cacheValue);
         // 获取封装类
-        return ResultUtils.success(pictureService.getPictureVOPage(picturePage, request));
+        return ResultUtils.success(pictureVOPage);
     }
 
     /**
